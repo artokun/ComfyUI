@@ -8,6 +8,36 @@ from comfy_api.latest import _io
 MISSING = object()
 
 
+class BranchNode(io.ComfyNode):
+    @classmethod
+    def define_schema(cls):
+        mtemplate = io.MatchType.Template("switch")
+        minput = io.MatchType.Input("branch", template=mtemplate, lazy=True, optional=True)
+        template = _io.Autogrow.TemplatePrefix(input=minput, prefix="branch", min=1, max=10)
+        return io.Schema(
+            node_id="BranchNode",
+            display_name="Branch",
+            category="logic",
+            is_experimental=True,
+            inputs=[
+                io.Int.Input("branch"),
+                _io.Autogrow.Input("autogrow", template=template)
+            ],
+            outputs=[
+                io.MatchType.Output(template=mtemplate, display_name="output"),
+            ],
+        )
+
+    @classmethod
+    def check_lazy_status(cls, branch, autogrow):
+        print('lazy', branch)
+        return ['autogrow.' + list(autogrow.keys())[branch]]
+
+    @classmethod
+    def execute(cls, branch, autogrow) -> io.NodeOutput:
+        print(branch)
+        return list(autogrow.values())[branch],
+
 class SwitchNode(io.ComfyNode):
     @classmethod
     def define_schema(cls):
@@ -268,6 +298,7 @@ class LogicExtension(ComfyExtension):
             # AutogrowPrefixTestNode,
             # ComboOutputTestNode,
             # InvertBooleanNode,
+            BranchNode,
         ]
 
 async def comfy_entrypoint() -> LogicExtension:
