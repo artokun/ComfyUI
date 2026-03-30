@@ -30,13 +30,21 @@ class BranchNode(io.ComfyNode):
 
     @classmethod
     def check_lazy_status(cls, branch, autogrow):
-        print('lazy', branch)
-        return ['autogrow.' + list(autogrow.keys())[branch]]
+        keys = list(autogrow.keys())
+        if branch < 0 or branch >= len(keys):
+            return []
+        target_key = keys[branch]
+        # Return the target input name only if it hasn't been loaded yet
+        if autogrow.get(target_key) is None:
+            return ['autogrow.' + target_key]
+        return []
 
     @classmethod
     def execute(cls, branch, autogrow) -> io.NodeOutput:
-        print(branch)
-        return list(autogrow.values())[branch],
+        keys = list(autogrow.keys())
+        if branch < 0 or branch >= len(keys):
+            raise ValueError(f"Branch index {branch} out of range (0-{len(keys)-1})")
+        return io.NodeOutput(autogrow[keys[branch]])
 
 class SwitchNode(io.ComfyNode):
     @classmethod
